@@ -134,6 +134,23 @@ Before the first release succeeds, configure PyPI:
    - Environment name: `pypi`
 3. In this repo's settings, create a GitHub Environment named `pypi`.
 
+### One-time branch protection setup
+
+`release.yml` pushes the version-bump commit and tag back to `main`. The
+default `GITHUB_TOKEN` cannot bypass branch protection, so you must grant
+the workflow's bot account explicit bypass rights:
+
+1. Go to **Settings → Branches → Branch protection rules → `main`** (create
+   the rule if you haven't yet).
+2. Under **"Allow specified actors to bypass required pull requests"** (and
+   "Allow force pushes" if that toggle is on), add **`github-actions[bot]`**.
+3. If you use rulesets instead of classic protection: **Settings → Rules →
+   Rulesets → your `main` ruleset → Bypass list →** add the
+   `github-actions` role.
+
+Without this, the release workflow will fail at the "Push version bump and
+tag" step with a protected-branch rejection.
+
 ## Project management
 
 - **Roadmap, features, bugs**: tracked on GitHub Projects.
