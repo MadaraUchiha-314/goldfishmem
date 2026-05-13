@@ -1,6 +1,6 @@
 # Architecture
 
-This page describes the high-level architecture of goldfish. Diagrams are
+This page describes the high-level architecture of goldfishmem. Diagrams are
 written in [mermaid](https://mermaid.js.org/) so they render inline on GitHub.
 
 > The project is in its earliest stage — this page currently shows the intended
@@ -48,5 +48,5 @@ sequenceDiagram
 
 ## Where to read next
 
-- The package source lives under [`goldfishmem/`](https://github.com/MadaraUchiha-314/goldfish/tree/main/goldfishmem).
-- Test layout: [`tests/unit/`](https://github.com/MadaraUchiha-314/goldfish/tree/main/tests/unit) and [`tests/integration/`](https://github.com/MadaraUchiha-314/goldfish/tree/main/tests/integration).
+- The package source lives under [`goldfishmem/`](https://github.com/MadaraUchiha-314/goldfishmem/tree/main/goldfishmem).
+- Test layout: [`tests/unit/`](https://github.com/MadaraUchiha-314/goldfishmem/tree/main/tests/unit) and [`tests/integration/`](https://github.com/MadaraUchiha-314/goldfishmem/tree/main/tests/integration).

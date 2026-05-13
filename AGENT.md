@@ -5,9 +5,8 @@ This file mirrors `CLAUDE.md`; either may be consulted depending on the agent.
 
 ## Project
 
-`goldfish` is a production grade memory system for agents. The PyPI distribution is
-published as **`goldfishmem`** (the name `goldfish` is taken on PyPI), and the
-import name matches: `from goldfishmem import ...`.
+`goldfishmem` is a production grade memory system for agents. The PyPI
+distribution and the Python import name match: `from goldfishmem import ...`.
 
 ## Tech stack
 

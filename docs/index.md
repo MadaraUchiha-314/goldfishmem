@@ -1,9 +1,8 @@
-# goldfish
+# goldfishmem
 
 A production grade memory system for agents.
 
-> The package is published on PyPI as **`goldfishmem`** (the name `goldfish` was
-> already taken). The Python import name matches the distribution name:
+The Python import name matches the distribution name:
 > `from goldfishmem import ...`.
 
 ## Install
@@ -25,10 +24,10 @@ print(hello_world("goldfish"))  # "Hello, goldfish!"
 
 ## Documentation
 
-- [Architecture](./architecture.md) — how goldfish is structured internally.
+- [Architecture](./architecture.md) — how goldfishmem is structured internally.
 
 ## Project links
 
-- Source: https://github.com/MadaraUchiha-314/goldfish
-- Issues: https://github.com/MadaraUchiha-314/goldfish/issues
+- Source: https://github.com/MadaraUchiha-314/goldfishmem
+- Issues: https://github.com/MadaraUchiha-314/goldfishmem/issues
 - PyPI: https://pypi.org/project/goldfishmem/

@@ -1,4 +1,4 @@
-# Contributing to goldfish
+# Contributing to goldfishmem
 
 Thanks for considering a contribution! This project is in its early days and
 contributions, bug reports, and feature ideas are all welcome.
@@ -17,8 +17,8 @@ contributions, bug reports, and feature ideas are all welcome.
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # 2. Clone & sync
-git clone https://github.com/MadaraUchiha-314/goldfish.git
-cd goldfish
+git clone https://github.com/MadaraUchiha-314/goldfishmem.git
+cd goldfishmem
 uv sync
 
 # 3. Install pre-commit hooks (covers commit-msg too)

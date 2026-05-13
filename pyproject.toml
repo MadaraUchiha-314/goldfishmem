@@ -19,9 +19,9 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/MadaraUchiha-314/goldfish"
-Repository = "https://github.com/MadaraUchiha-314/goldfish"
-Issues = "https://github.com/MadaraUchiha-314/goldfish/issues"
+Homepage = "https://github.com/MadaraUchiha-314/goldfishmem"
+Repository = "https://github.com/MadaraUchiha-314/goldfishmem"
+Issues = "https://github.com/MadaraUchiha-314/goldfishmem/issues"
 
 [build-system]
 requires = ["hatchling"]
