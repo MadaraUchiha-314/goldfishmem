@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: write
+  id-token: write
+
+env:
+  PYTHON_VERSION: "3.12"
+  UV_VERSION: "0.5.x"
+
+jobs:
+  release:
+    name: Bump version & publish to PyPI
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main'
+    environment:
+      name: pypi
+      url: https://pypi.org/p/goldfishmem
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+
+      - name: Set up Python
+        run: uv python install ${{ env.PYTHON_VERSION }}
+
+      - name: Install dependencies
+        run: uv sync --frozen --all-extras --dev
+
+      - name: Bump version with commitizen
+        id: bump
+        run: |
+          set -e
+          # cz exits with 21 (NoCommitsToBumpError) when nothing has changed.
+          # Capture that case and skip the rest of the release.
+          if uv run cz bump --yes --changelog; then
+            echo "bumped=true" >> "$GITHUB_OUTPUT"
+            version=$(uv run cz version --project)
+            echo "version=$version" >> "$GITHUB_OUTPUT"
+          else
+            code=$?
+            if [ "$code" = "21" ]; then
+              echo "No commits to bump; skipping release."
+              echo "bumped=false" >> "$GITHUB_OUTPUT"
+            else
+              exit $code
+            fi
+          fi
+
+      - name: Push version bump and tag
+        if: steps.bump.outputs.bumped == 'true'
+        run: |
+          git push origin main
+          git push origin --tags
+
+      - name: Build distribution
+        if: steps.bump.outputs.bumped == 'true'
+        run: uv build
+
+      - name: Publish to PyPI (Trusted Publishing)
+        if: steps.bump.outputs.bumped == 'true'
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: dist/
+          print-hash: true
+
+      - name: Create GitHub Release
+        if: steps.bump.outputs.bumped == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.bump.outputs.version }}
+          name: v${{ steps.bump.outputs.version }}
+          body_path: CHANGELOG.md
+          files: dist/*
