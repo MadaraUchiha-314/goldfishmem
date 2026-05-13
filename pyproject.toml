@@ -1,6 +1,6 @@
 [project]
 name = "goldfishmem"
-version = "0.0.1"
+version = "0.1.0"
 description = "A production grade memory system for agents"
 readme = "README.md"
 license = { file = "LICENSE" }
@@ -102,7 +102,7 @@ exclude_lines = [
 
 [tool.commitizen]
 name = "cz_conventional_commits"
-version = "0.0.1"
+version = "0.1.0"
 version_files = [
     "pyproject.toml:^version",
     "goldfishmem/__init__.py:^__version__",
