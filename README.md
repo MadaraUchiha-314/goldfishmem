@@ -1,9 +1,9 @@
-# goldfish
+# goldfishmem
 
 > A production grade memory system for agents.
 
-`goldfish` is published on PyPI as **`goldfishmem`** (the name `goldfish` was
-already taken). The Python import name matches the distribution:
+`goldfishmem` is published on PyPI under the same name. The Python import name
+matches the distribution:
 
 ```python
 from goldfishmem import hello_world
@@ -55,8 +55,8 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 ### 2. Clone and sync dependencies
 
 ```bash
-git clone https://github.com/MadaraUchiha-314/goldfish.git
-cd goldfish
+git clone https://github.com/MadaraUchiha-314/goldfishmem.git
+cd goldfishmem
 uv sync
 ```
 
@@ -129,7 +129,7 @@ Before the first release succeeds, configure PyPI:
    under your PyPI account → *Publishing* → *Add a new pending publisher*.
 2. Add a trusted publisher with:
    - Owner: `MadaraUchiha-314`
-   - Repository: `goldfish`
+   - Repository: `goldfishmem`
    - Workflow filename: `release.yml`
    - Environment name: `pypi`
 3. In this repo's settings, create a GitHub Environment named `pypi`.
@@ -137,7 +137,7 @@ Before the first release succeeds, configure PyPI:
 ## Project management
 
 - **Roadmap, features, bugs**: tracked on GitHub Projects.
-- **Community feedback**: open a [GitHub Issue](https://github.com/MadaraUchiha-314/goldfish/issues).
+- **Community feedback**: open a [GitHub Issue](https://github.com/MadaraUchiha-314/goldfishmem/issues).
 - **Coding-agent contributions**: see [`CLAUDE.md`](./CLAUDE.md) and
   [`AGENT.md`](./AGENT.md). Agents must post a plan with a `[Plan by <agent>]`
   prefix on the relevant issue and wait for human approval before implementing.
