@@ -68,16 +68,24 @@ The virtualenv is created at `.venv/` in the repo root.
    the conventional-commits prefix: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`,
    `test:`, `build:`, `ci:`, `perf:`, `style:`, `revert:`. This is enforced by
    commitizen via the `commit-msg` pre-commit hook.
-3. **GitHub Projects** is the source of truth for features, bugs, and the project
+3. **Pull-request titles MUST also follow Conventional Commits.** PRs are
+   squash-merged onto `main`, and the squash commit takes the PR title. Because
+   `release.yml` runs `cz bump` to compute the next semver from commit messages
+   on `main`, a non-conventional PR title will break automated semantic
+   releases. Pick the prefix that reflects the PR's user-visible impact:
+   `feat:` (minor bump), `fix:` (patch bump), `feat!:`/`fix!:` or a
+   `BREAKING CHANGE:` footer (major bump), and `chore:`/`docs:`/`test:`/`ci:`/
+   `build:`/`refactor:`/`style:`/`perf:`/`revert:` for no version bump.
+4. **GitHub Projects** is the source of truth for features, bugs, and the project
    roadmap. Track all work there.
-4. **Community contributions** are welcome — feature requests and bug reports
+5. **Community contributions** are welcome — feature requests and bug reports
    should be filed as GitHub Issues.
-5. **Type checking is strict.** New code must pass `pyright` in strict mode.
-6. **Tests are required.** New functionality must come with unit tests in `tests/`.
+6. **Type checking is strict.** New code must pass `pyright` in strict mode.
+7. **Tests are required.** New functionality must come with unit tests in `tests/`.
    Integration tests should be marked with `@pytest.mark.integration`.
-7. **Docs in `docs/` are consumer-facing.** Developer docs live in the root
+8. **Docs in `docs/` are consumer-facing.** Developer docs live in the root
    `README.md`.
-8. **Don't create files** (especially Markdown docs) unless they are necessary for
+9. **Don't create files** (especially Markdown docs) unless they are necessary for
    the task. Prefer editing existing files.
 
 ## Agent support

@@ -58,13 +58,20 @@ uv run pytest
 2. **Conventional Commits / semantic commits — always.** Commit messages MUST start
    with one of: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `build:`,
    `ci:`, `perf:`, `style:`, `revert:`. Enforced by commitizen on `commit-msg`.
-3. **GitHub Projects** is the source of truth for features, bugs, and the roadmap.
-4. **Community** can submit GitHub Issues for feature requests and bug reports.
-5. **Strict type-checking.** New code must pass `pyright` strict.
-6. **Tests required.** Add unit tests under `tests/` for every new function.
+3. **PR titles MUST follow Conventional Commits too.** PRs are squash-merged
+   onto `main`, so the squash commit inherits the PR title. `release.yml` runs
+   `cz bump` to derive the next semver from commits on `main`; a non-conventional
+   PR title will break the semantic release. Use `feat:` (minor), `fix:` (patch),
+   `feat!:` / `fix!:` or a `BREAKING CHANGE:` footer (major), or
+   `chore:`/`docs:`/`test:`/`ci:`/`build:`/`refactor:`/`style:`/`perf:`/`revert:`
+   for no version bump.
+4. **GitHub Projects** is the source of truth for features, bugs, and the roadmap.
+5. **Community** can submit GitHub Issues for feature requests and bug reports.
+6. **Strict type-checking.** New code must pass `pyright` strict.
+7. **Tests required.** Add unit tests under `tests/` for every new function.
    Integration tests use the `@pytest.mark.integration` marker.
-7. `docs/` is for consumers of the package; developer docs live in `README.md`.
-8. Prefer editing existing files. Avoid creating new files (especially docs) unless
+8. `docs/` is for consumers of the package; developer docs live in `README.md`.
+9. Prefer editing existing files. Avoid creating new files (especially docs) unless
    necessary.
 
 ## MCPs and self-containment
