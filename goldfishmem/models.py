@@ -2,9 +2,9 @@
 
 Defines the foundational types referenced throughout the PRD:
 - Input types: Interaction, Observation
-- Memory types: Memory (base), SemanticMemory, EpisodicMemory, ProceduralMemory, CustomMemory
+- Memory type: Memory (single type, memory_type is config-driven)
 - Provenance types: Provenance, Citation, InteractionRef, ObservationRef, MemoryRef
-- Supporting types: SourceType, MemoryType, ExtractionMethod, EmbeddingMetadata
+- Supporting types: ExtractionMethod, EmbeddingMetadata
 """
 
 from __future__ import annotations
@@ -16,26 +16,26 @@ from enum import Enum
 from typing import Any
 
 # ---------------------------------------------------------------------------
-# Enums
+# Default type constants
 # ---------------------------------------------------------------------------
 
+# Default source types (PRD §4). Users can define additional source types
+# through configuration.
+SOURCE_TYPE_CONVERSATION: str = "conversation"
+SOURCE_TYPE_CLICKSTREAM: str = "clickstream"
+SOURCE_TYPE_DOCUMENT: str = "document"
+SOURCE_TYPE_DOMAIN_ENTITY: str = "domain_entity"
 
-class SourceType(Enum):
-    """Type of input data source (PRD §4)."""
-
-    CONVERSATION = "conversation"
-    CLICKSTREAM = "clickstream"
-    DOCUMENT = "document"
-    DOMAIN_ENTITY = "domain_entity"
+# Default memory types (PRD §5). Users can define additional memory types
+# through configuration.
+MEMORY_TYPE_SEMANTIC: str = "semantic"
+MEMORY_TYPE_EPISODIC: str = "episodic"
+MEMORY_TYPE_PROCEDURAL: str = "procedural"
 
 
-class MemoryType(Enum):
-    """Memory type taxonomy (PRD §5)."""
-
-    SEMANTIC = "semantic"
-    EPISODIC = "episodic"
-    PROCEDURAL = "procedural"
-    CUSTOM = "custom"
+# ---------------------------------------------------------------------------
+# Enums
+# ---------------------------------------------------------------------------
 
 
 class ExtractionMethod(Enum):
@@ -74,7 +74,7 @@ class InteractionRef:
     """Lightweight reference to an Interaction."""
 
     id: str
-    source_type: SourceType
+    source_type: str
 
 
 @dataclass(frozen=True)
@@ -89,7 +89,7 @@ class MemoryRef:
     """Lightweight reference to a Memory."""
 
     id: str
-    memory_type: MemoryType
+    memory_type: str
 
 
 @dataclass(frozen=True)
@@ -115,7 +115,7 @@ class Citation:
     material in the raw data store.
     """
 
-    source_type: SourceType
+    source_type: str
     source_id: str
     excerpt: str
     raw_data_uri: str
@@ -149,7 +149,7 @@ class Interaction:
     etc. that the memory system can learn from.
     """
 
-    source_type: SourceType
+    source_type: str
     content: dict[str, Any]
     id: str = field(default_factory=_new_id)
     timestamp: datetime = field(default_factory=_now)
@@ -172,70 +172,27 @@ class Observation:
 
 
 # ---------------------------------------------------------------------------
-# Memory types
+# Memory
 # ---------------------------------------------------------------------------
 
 
 @dataclass(frozen=True)
 class Memory:
-    """Base class for all memory types (PRD §1, §5).
+    """A derived, persisted unit of knowledge (PRD §1, §5).
 
-    A derived, persisted unit of knowledge extracted from one or more
-    interactions, intended to aid future task execution.
+    Extracted from one or more interactions, intended to aid future task
+    execution.  The ``memory_type`` field is a string so that users can
+    define custom types through configuration.  The system ships default
+    constants (``MEMORY_TYPE_SEMANTIC``, ``MEMORY_TYPE_EPISODIC``,
+    ``MEMORY_TYPE_PROCEDURAL``) but does not restrict the set of allowed
+    values at the model level.
     """
 
     content: str
-    memory_type: MemoryType
+    memory_type: str
     provenance: Provenance
     embedding_metadata: EmbeddingMetadata
     id: str = field(default_factory=_new_id)
     created_at: datetime = field(default_factory=_now)
     updated_at: datetime = field(default_factory=_now)
     metadata: dict[str, Any] = field(default_factory=lambda: dict[str, Any]())
-
-
-@dataclass(frozen=True)
-class SemanticMemory(Memory):
-    """Facts and conceptual knowledge (PRD §5).
-
-    Examples: "The user prefers dark mode", "Company policy requires 2FA".
-    """
-
-    confidence: float = 1.0
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        super().__init_subclass__(**kwargs)
-
-
-@dataclass(frozen=True)
-class EpisodicMemory(Memory):
-    """Specific past events and experiences (PRD §5).
-
-    Examples: "On 2026-03-01 the user reported a login bug",
-    "The deployment on Friday caused a 5-minute outage".
-    """
-
-    event_timestamp: datetime = field(default_factory=_now)
-    participants: tuple[str, ...] = ()
-
-
-@dataclass(frozen=True)
-class ProceduralMemory(Memory):
-    """Preferences, behaviour patterns, and how-to knowledge (PRD §5).
-
-    Examples: "The user always reviews PRs before merging",
-    "When debugging, start with the error log".
-    """
-
-    trigger_context: str = ""
-
-
-@dataclass(frozen=True)
-class CustomMemory(Memory):
-    """Extension point for domain-specific memory types (PRD §5).
-
-    Use ``custom_type`` to identify the domain-specific subtype.  For richer
-    domain models, subclass ``CustomMemory`` directly.
-    """
-
-    custom_type: str = ""
