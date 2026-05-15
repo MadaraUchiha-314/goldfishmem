@@ -1,15 +1,12 @@
-"""Example integration test.
-
-Integration tests live in `tests/integration/` and run against real external
-dependencies. They are run separately from unit tests in CI.
-"""
+"""Smoke test to verify the package is importable end-to-end."""
 
 import pytest
 
-from goldfishmem import hello_world
+from goldfishmem import Memory, Provenance
 
 
 @pytest.mark.integration
-def test_hello_world_integration_smoke() -> None:
-    """Smoke test to verify the package is importable and callable end-to-end."""
-    assert hello_world("integration") == "Hello, integration!"
+def test_package_importable() -> None:
+    """Verify core types are importable from the top-level package."""
+    assert Memory is not None
+    assert Provenance is not None
