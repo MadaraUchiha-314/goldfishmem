@@ -20,6 +20,15 @@
   performed by its executor.
 - **Context Construction** — the act of assembling the right context for a given
   task at execution time.
+- **Provenance** — the derivation record of a memory: which source
+  interactions/observations it was extracted from, when, by which extraction
+  run, and (for consolidated memories) which prior memories contributed.
+- **Citation** — a reference included alongside a returned memory that points
+  back to the original source material, enabling a consumer to verify or
+  inspect the original data.
+- **Lineage** — the full chain of derivations from raw input through
+  intermediate memories to the final memory, including multi-hop paths created
+  by reflection or consolidation.
 
 ## 2. Motivation
 
@@ -104,16 +113,21 @@ prompt extracts memories from the input observations.
 ```
 process_interactions(interactions: list[Interaction])
   ├── before_extract_memories()   # hook
-  ├── extract_memories()          # LLM call
+  ├── extract_memories()          # LLM call — populates provenance
   ├── after_extract_memories()    # hook
-  ├── reflect()
-  └── write_memories()
+  ├── reflect()                   # provenance references parent memories
+  └── write_memories()            # persists memories with provenance
 ```
 
 - The memory generation agent has access to tools that allow it to view
   existing memories.
 - The agent may also be given other tools that let it access domain data, to
   aid in memory generation.
+- `extract_memories()` must populate each memory's **provenance** with
+  references to the source interactions and observations, the extraction run
+  identifier, and a timestamp.
+- `reflect()` creates new memories whose provenance references the input
+  memories (not the original interactions), preserving multi-hop lineage.
 
 ### Memory types
 
@@ -125,6 +139,41 @@ Extracted memories are typed. The taxonomy:
 - **Custom** — extension point for domain-specific memory types.
 
 A memory must be searchable given a natural-language or fuzzy query.
+
+### Provenance model
+
+Every memory carries a **provenance record** from the moment of creation.
+Provenance is not optional metadata — it is part of the memory's identity.
+
+A provenance record captures:
+
+- **Source interactions** — references to the `Interaction`(s) from which the
+  memory was derived.
+- **Source observations** — the normalised `Observation`(s) that were inputs to
+  extraction.
+- **Source memories** — for memories derived from other memories (reflection,
+  consolidation), references to the parent memories.
+- **Extraction run ID** — identifier of the extraction run that created the
+  memory.
+- **Extracted at** — timestamp of extraction.
+- **Extraction method** — e.g. `llm_extraction`, `reflection`, `consolidation`.
+
+**Citations.** When the retrieval API returns memories, each memory includes a
+`citations` field containing enough information for the consumer to locate and
+verify the original source material in the raw data store. A citation includes:
+source type, source identifier, relevant span or excerpt, and a URI to the raw
+data store.
+
+**Traceability.** The system must support two query directions:
+
+1. **Forward:** given a source interaction, what memories were derived? (Useful
+   for impact analysis when a source is corrected or retracted.)
+2. **Backward:** given a memory, what sources contributed? (Useful for
+   verification and trust.)
+
+**Multi-hop lineage.** When memories are derived from other memories via
+`reflect()` or consolidation, the provenance chain is preserved. The system
+must support traversing the full lineage graph, not just direct parents.
 
 ## 6. Memory Storage
 
@@ -140,10 +189,14 @@ stores:
   decision.
 - **Memory metadata store** — maintains a hierarchical "table of contents" of
   all memories. This aids generation, organisation, and (most importantly)
-  retrieval.
+  retrieval. The metadata store also maintains **provenance indexes** that
+  support both forward (source → derived memories) and backward (memory →
+  sources) lineage queries.
 - **Raw data store (S3-like)** — stores the original, un-processed input data
   (documents, audio, full conversations, raw event payloads). Memories carry
-  references back to their sources here.
+  references back to their sources here. Provenance references use **stable
+  URIs** into this store so that citations remain valid even if the raw data
+  is archived or migrated.
 
 ### Cross-cutting storage notes
 
@@ -169,6 +222,10 @@ all memories relevant to that task. The retrieval surface is an **agent**, not
 a single vector lookup: it can look at the memory metadata (the hierarchical
 TOC), traverse the knowledge graph, and run a loop using multiple search tools
 to do better retrieval than fuzzy search alone.
+
+The core retrieval API returns **ranked memories, each annotated with its full
+provenance record and source citations**. Consumers can use citations to display
+source references, verify memory accuracy, or trace back to the original data.
 
 ### Context construction
 
@@ -256,6 +313,8 @@ allow us to:
   - The actions taken by the memory agent when a new interaction arrives.
   - The actions taken by the memory agent when a task request comes in and
     memory is requested for that task.
+- Display **provenance lineage graphs** showing the derivation chain from raw
+  sources through intermediate memories to final memories.
 
 > **Open question:** can we just use Langfuse (or a similar agent observability
 > tool) for the trace portion, and build a thin custom UI only for the
@@ -272,3 +331,6 @@ decided during planning:
 3. Whether prompt + weights are the only tunable variables for self-improvement.
 4. Whether Langfuse (or similar) is sufficient for agent-trace visualisation.
 5. Concrete benchmark selection (LongMemEval, LoCoMo, custom, etc.).
+6. Provenance storage strategy: should provenance/lineage data live in the
+   graph store (natural fit for traversal queries), the metadata store, or
+   both? What are the performance implications of multi-hop lineage queries?
