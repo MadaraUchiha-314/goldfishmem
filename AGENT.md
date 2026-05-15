@@ -50,10 +50,15 @@ uv run pytest
 
 1. **Plan first, implement after approval.** For any non-trivial work, post the
    implementation plan as a comment on the relevant GitHub Issue or project work
-   item **before** writing code. Prefix the comment with `**[Plan by <agent>]**`
-   (e.g. `[Plan by Claude]`, `[Plan by Cursor]`) so reviewers can identify the
-   author. Wait for the user to review and approve the plan before implementing.
-   Only skip this for clearly trivial changes (typo fixes, one-line config tweaks).
+   item **before** writing code. Wait for the user to review and approve the
+   plan before implementing. Only skip this for clearly trivial changes (typo
+   fixes, one-line config tweaks).
+1a. **Agent comment prefix — always.** All comments posted by a coding agent on
+   GitHub Issues, PRs, or any other platform must be prefixed with a title line:
+   `**Comment by: <Agent Name>-<Model Name>**`. For example:
+   `**Comment by: Claude Code-claude-opus-4-6**` or
+   `**Comment by: Cursor-gpt-4o**`. This makes it easy to identify which agent
+   (and which model) authored each comment.
 2. **Conventional Commits / semantic commits — always.** Commit messages MUST start
    with one of: `feat:`, `fix:`, `chore:`, `docs:`, `refactor:`, `test:`, `build:`,
    `ci:`, `perf:`, `style:`, `revert:`. Enforced by commitizen on `commit-msg`.
