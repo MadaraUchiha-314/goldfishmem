@@ -93,9 +93,22 @@ class TestExtractionMethod:
         assert ExtractionMethod.LLM_EXTRACTION.value == "llm_extraction"
         assert ExtractionMethod.REFLECTION.value == "reflection"
         assert ExtractionMethod.CONSOLIDATION.value == "consolidation"
+        assert ExtractionMethod.DIRECT_UPDATE.value == "direct_update"
 
     def test_membership(self) -> None:
-        assert len(ExtractionMethod) == 3
+        assert len(ExtractionMethod) == 4
+
+    def test_direct_update_provenance(self) -> None:
+        """Memories written directly by an external caller use DIRECT_UPDATE."""
+        prov = Provenance(
+            extraction_run_id="manual-001",
+            extracted_at=datetime(2026, 5, 18, tzinfo=UTC),
+            extraction_method=ExtractionMethod.DIRECT_UPDATE,
+        )
+        assert prov.extraction_method == ExtractionMethod.DIRECT_UPDATE
+        assert prov.source_interactions == ()
+        assert prov.source_observations == ()
+        assert prov.source_memories == ()
 
 
 # ---------------------------------------------------------------------------

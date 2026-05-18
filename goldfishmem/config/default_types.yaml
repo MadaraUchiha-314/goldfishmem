@@ -1,0 +1,27 @@
+# Default source and memory types shipped with goldfishmem.
+#
+# Users extend or override these by loading their own type registry (see
+# goldfishmem.config.load_type_registry).
+#
+# Each entry may carry an `attributes` mapping with type-specific
+# configuration for extraction, retrieval, etc.  Attributes are kept as
+# opaque mappings here so that new fields can be added without changing
+# the loader.
+
+source_types:
+  conversation:
+    attributes: {}
+  clickstream:
+    attributes: {}
+  document:
+    attributes: {}
+  domain_entity:
+    attributes: {}
+
+memory_types:
+  semantic:
+    attributes: {}
+  episodic:
+    attributes: {}
+  procedural:
+    attributes: {}
