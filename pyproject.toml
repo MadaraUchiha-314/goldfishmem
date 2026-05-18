@@ -16,7 +16,9 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
-dependencies = []
+dependencies = [
+    "pyyaml>=6.0",
+]
 
 [project.urls]
 Homepage = "https://github.com/MadaraUchiha-314/goldfishmem"
@@ -41,6 +43,7 @@ dev = [
     "pytest-cov>=6.0.0",
     "pre-commit>=4.0.0",
     "commitizen>=4.0.0",
+    "types-pyyaml>=6.0",
 ]
 
 [tool.ruff]
