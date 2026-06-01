@@ -1,10 +1,17 @@
 """goldfishmem: a production grade memory system for agents."""
 
 from goldfishmem.config import (
+    DEFAULT_CONFIG_FILE,
+    DEFAULT_SETTINGS,
     DEFAULT_TYPE_REGISTRY,
-    DEFAULT_TYPES_DIR,
+    EmbeddingSettings,
+    RetrievalSettings,
+    Settings,
+    StorageSettings,
     TypeDefinition,
     TypeRegistry,
+    TypeRegistrySettings,
+    load_settings,
     load_type_registry,
 )
 from goldfishmem.models import (
@@ -29,7 +36,8 @@ from goldfishmem.models import (
 
 __version__ = "0.1.0"
 __all__ = [
-    "DEFAULT_TYPES_DIR",
+    "DEFAULT_CONFIG_FILE",
+    "DEFAULT_SETTINGS",
     "DEFAULT_TYPE_REGISTRY",
     "MEMORY_TYPE_EPISODIC",
     "MEMORY_TYPE_PROCEDURAL",
@@ -40,6 +48,7 @@ __all__ = [
     "SOURCE_TYPE_DOMAIN_ENTITY",
     "Citation",
     "EmbeddingMetadata",
+    "EmbeddingSettings",
     "ExtractionMethod",
     "Interaction",
     "InteractionRef",
@@ -48,8 +57,13 @@ __all__ = [
     "Observation",
     "ObservationRef",
     "Provenance",
+    "RetrievalSettings",
+    "Settings",
+    "StorageSettings",
     "TypeDefinition",
     "TypeRegistry",
+    "TypeRegistrySettings",
     "__version__",
+    "load_settings",
     "load_type_registry",
 ]
