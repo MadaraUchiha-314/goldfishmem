@@ -1,9 +1,27 @@
 """Configuration loaders for goldfishmem.
 
-Source and memory types are config-driven (PRD §4, §5).  The defaults
-shipped with the package live in ``default_types.yaml``; users register
-custom types by loading additional YAML files through
-:func:`load_type_registry`.
+Source and memory types are config-driven (PRD §4, §5).  Each type lives
+in its own YAML file under a directory tree:
+
+::
+
+    <root>/
+        source_types/
+            conversation.yaml
+            clickstream.yaml
+            ...
+        memory_types/
+            semantic.yaml
+            episodic.yaml
+            ...
+
+The filename (without extension) is the type name; each file's body is a
+mapping with an ``attributes`` key so per-type extraction / retrieval
+settings can grow without changing this module.
+
+The defaults shipped with the package live under
+``goldfishmem/config/default_types/``.  Users register custom types by
+pointing :func:`load_type_registry` at their own directory.
 """
 
 from __future__ import annotations
@@ -16,15 +34,18 @@ from typing import Any, cast
 import yaml
 
 __all__ = [
+    "DEFAULT_TYPES_DIR",
     "DEFAULT_TYPE_REGISTRY",
-    "DEFAULT_TYPES_YAML",
     "TypeDefinition",
     "TypeRegistry",
     "load_type_registry",
 ]
 
 
-DEFAULT_TYPES_YAML: Path = Path(str(files("goldfishmem.config").joinpath("default_types.yaml")))
+DEFAULT_TYPES_DIR: Path = Path(str(files("goldfishmem.config").joinpath("default_types")))
+
+_SOURCE_TYPES_SUBDIR = "source_types"
+_MEMORY_TYPES_SUBDIR = "memory_types"
 
 
 @dataclass(frozen=True)
@@ -54,48 +75,53 @@ class TypeRegistry:
         return self.memory_types[name]
 
 
-def _parse_section(raw: object) -> dict[str, TypeDefinition]:
-    if raw is None:
-        return {}
-    if not isinstance(raw, dict):
-        raise ValueError("Type section must be a mapping of name -> entry")
-    entries = cast(dict[Any, Any], raw)
-    result: dict[str, TypeDefinition] = {}
-    for name, entry in entries.items():
-        if not isinstance(name, str):
-            raise ValueError(f"Type name must be a string, got {type(name).__name__}")
-        attributes: dict[str, Any] = {}
-        if entry is not None:
-            if not isinstance(entry, dict):
-                raise ValueError(f"Entry for {name!r} must be a mapping")
-            entry_map = cast(dict[Any, Any], entry)
-            raw_attrs: object = entry_map.get("attributes", {})
-            if raw_attrs is None:
-                attributes = {}
-            elif isinstance(raw_attrs, dict):
-                attributes = dict(cast(dict[Any, Any], raw_attrs))
-            else:
-                raise ValueError(f"Attributes for {name!r} must be a mapping")
-        result[name] = TypeDefinition(name=name, attributes=attributes)
-    return result
-
-
-def load_type_registry(path: Path | str = DEFAULT_TYPES_YAML) -> TypeRegistry:
-    """Load a :class:`TypeRegistry` from a YAML file.
-
-    The file must contain ``source_types`` and/or ``memory_types`` keys,
-    each mapping a type name to an entry of the shape
-    ``{attributes: {...}}``.  Missing sections produce an empty mapping.
-    """
-
-    text = Path(path).read_text(encoding="utf-8")
+def _load_type_file(path: Path) -> TypeDefinition:
+    name = path.stem
+    text = path.read_text(encoding="utf-8")
     data: object = yaml.safe_load(text) or {}
     if not isinstance(data, dict):
         raise ValueError(f"Expected mapping at top level of {path}")
     data_map = cast(dict[Any, Any], data)
+    raw_attrs: object = data_map.get("attributes", {})
+    if raw_attrs is None:
+        attributes: dict[str, Any] = {}
+    elif isinstance(raw_attrs, dict):
+        attributes = dict(cast(dict[Any, Any], raw_attrs))
+    else:
+        raise ValueError(f"Attributes for {name!r} in {path} must be a mapping")
+    return TypeDefinition(name=name, attributes=attributes)
+
+
+def _load_type_dir(directory: Path) -> dict[str, TypeDefinition]:
+    if not directory.is_dir():
+        return {}
+    result: dict[str, TypeDefinition] = {}
+    for entry in sorted(directory.iterdir()):
+        if entry.suffix not in {".yaml", ".yml"} or not entry.is_file():
+            continue
+        definition = _load_type_file(entry)
+        if definition.name in result:
+            raise ValueError(f"Duplicate type {definition.name!r} in {directory}")
+        result[definition.name] = definition
+    return result
+
+
+def load_type_registry(path: Path | str = DEFAULT_TYPES_DIR) -> TypeRegistry:
+    """Load a :class:`TypeRegistry` from a directory of per-type YAML files.
+
+    The directory is expected to contain ``source_types/`` and/or
+    ``memory_types/`` subdirectories; each ``*.yaml`` (or ``*.yml``) file
+    inside represents one type, with the filename (without extension) as
+    the type name.  Missing subdirectories produce an empty mapping for
+    that section.
+    """
+
+    root = Path(path)
+    if not root.is_dir():
+        raise ValueError(f"Type registry path must be a directory: {root}")
     return TypeRegistry(
-        source_types=_parse_section(data_map.get("source_types")),
-        memory_types=_parse_section(data_map.get("memory_types")),
+        source_types=_load_type_dir(root / _SOURCE_TYPES_SUBDIR),
+        memory_types=_load_type_dir(root / _MEMORY_TYPES_SUBDIR),
     )
 
 

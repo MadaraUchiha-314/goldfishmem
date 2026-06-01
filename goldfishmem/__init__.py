@@ -2,6 +2,7 @@
 
 from goldfishmem.config import (
     DEFAULT_TYPE_REGISTRY,
+    DEFAULT_TYPES_DIR,
     TypeDefinition,
     TypeRegistry,
     load_type_registry,
@@ -28,6 +29,7 @@ from goldfishmem.models import (
 
 __version__ = "0.1.0"
 __all__ = [
+    "DEFAULT_TYPES_DIR",
     "DEFAULT_TYPE_REGISTRY",
     "MEMORY_TYPE_EPISODIC",
     "MEMORY_TYPE_PROCEDURAL",
