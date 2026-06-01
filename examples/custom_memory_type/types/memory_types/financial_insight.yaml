@@ -1,0 +1,7 @@
+# A custom memory type, defined entirely through config — no code changes.
+# The `attributes` mapping is opaque to the core models, so you can add
+# extraction/retrieval knobs here as those subsystems land.
+attributes:
+  retrieval:
+    recency_weight: 0.4
+  retention_days: 365

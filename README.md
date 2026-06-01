@@ -6,7 +6,7 @@
 matches the distribution:
 
 ```python
-from goldfishmem import hello_world
+from goldfishmem import load_settings, load_type_registry
 ```
 
 Consumer-facing documentation lives in [`docs/`](./docs/). This README is the
@@ -36,6 +36,7 @@ tests/
   unit/               # fast unit tests
   integration/        # integration tests (also gated on the `integration` marker)
 docs/                 # consumer-facing documentation
+examples/             # runnable usage examples
 .claude/              # Claude Code permissions/skills/plugins
 .mcp.json             # MCP server registrations (chrome-devtools, Lucid)
 .github/workflows/    # ci.yml, release.yml

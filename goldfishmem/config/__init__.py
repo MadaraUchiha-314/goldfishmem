@@ -24,7 +24,11 @@ settings can grow without changing this module.
 
 Users override the defaults by passing their own config file to
 :func:`load_settings`, then building a registry with
-:func:`load_type_registry`.
+:func:`load_type_registry`.  Both treat the shipped package config as a
+base layer: a user config inherits any keys it omits (deep-merged), and a
+user type registry is overlaid on top of the shipped default types.  Pass
+``merge_defaults=False`` / ``extend_defaults=False`` to opt out and load
+in isolation.
 """
 
 from __future__ import annotations
@@ -178,23 +182,54 @@ def _opt_int(value: object, ctx: str) -> int | None:
 # ---------------------------------------------------------------------------
 
 
-def load_settings(path: Path | str = DEFAULT_CONFIG_FILE) -> Settings:
-    """Load :class:`Settings` from the central config file.
+def _read_raw(path: Path) -> dict[Any, Any]:
+    text = path.read_text(encoding="utf-8")
+    raw: object = yaml.safe_load(text) or {}
+    return _require_mapping(raw, f"top level of {path}")
 
-    Relative paths inside the file (e.g. ``type_registry.root``) are
-    resolved relative to the config file's own directory.  Missing
-    sections fall back to the dataclass defaults.
+
+def _deep_merge(base: dict[Any, Any], override: dict[Any, Any]) -> dict[Any, Any]:
+    """Recursively merge ``override`` onto ``base`` (override wins).
+
+    Nested mappings are merged key-by-key; any non-mapping value (or a
+    type mismatch) replaces the base value outright.
     """
 
-    config_path = Path(path)
-    text = config_path.read_text(encoding="utf-8")
-    raw: object = yaml.safe_load(text) or {}
-    data = _require_mapping(raw, f"top level of {config_path}")
+    result: dict[Any, Any] = dict(base)
+    for key, value in override.items():
+        existing = result.get(key)
+        if isinstance(existing, dict) and isinstance(value, dict):
+            result[key] = _deep_merge(cast(dict[Any, Any], existing), cast(dict[Any, Any], value))
+        else:
+            result[key] = value
+    return result
 
+
+def _resolve_root_in_place(raw: dict[Any, Any], config_dir: Path) -> None:
+    """Resolve a relative ``type_registry.root`` against ``config_dir``.
+
+    Done per layer *before* merging so that a value inherited from the
+    base config keeps resolving against the base config's directory while
+    a user-supplied override resolves against the user file's directory.
+    """
+
+    tr = raw.get("type_registry")
+    if not isinstance(tr, dict):
+        return
+    tr_map = cast(dict[Any, Any], tr)
+    root_val = tr_map.get("root")
+    if not isinstance(root_val, str):
+        return
+    root = Path(root_val)
+    if not root.is_absolute():
+        tr_map["root"] = str(config_dir / root)
+
+
+def _build_settings(data: dict[Any, Any], source: Path) -> Settings:
     tr = _require_mapping(data.get("type_registry"), "type_registry")
     root = Path(_str_or_default(tr.get("root"), "default_types", "type_registry.root"))
     if not root.is_absolute():
-        root = config_path.parent / root
+        root = source.parent / root
     type_registry = TypeRegistrySettings(
         root=root,
         source_types_dir=_str_or_default(
@@ -227,8 +262,40 @@ def load_settings(path: Path | str = DEFAULT_CONFIG_FILE) -> Settings:
         embedding=embedding,
         storage=storage,
         retrieval=retrieval,
-        source=config_path,
+        source=source,
     )
+
+
+def load_settings(
+    path: Path | str = DEFAULT_CONFIG_FILE, *, merge_defaults: bool = True
+) -> Settings:
+    """Load :class:`Settings` from a config file.
+
+    By default the shipped package config (:data:`DEFAULT_CONFIG_FILE`)
+    is treated as a base layer and the file at ``path`` is deep-merged on
+    top of it: any key the user omits is inherited from the defaults, and
+    nested mappings (e.g. ``storage.options``) are merged rather than
+    replaced wholesale.  Pass ``merge_defaults=False`` to load ``path`` as
+    a standalone config with no inheritance.
+
+    Relative paths inside a file (e.g. ``type_registry.root``) are
+    resolved relative to *that* file's own directory, so a value inherited
+    from the base still points into the package while a user override
+    points next to the user's file.
+    """
+
+    user_path = Path(path)
+    layers: list[tuple[dict[Any, Any], Path]] = []
+    if merge_defaults and user_path != DEFAULT_CONFIG_FILE:
+        layers.append((_read_raw(DEFAULT_CONFIG_FILE), DEFAULT_CONFIG_FILE.parent))
+    layers.append((_read_raw(user_path), user_path.parent))
+
+    merged: dict[Any, Any] = {}
+    for raw, config_dir in layers:
+        _resolve_root_in_place(raw, config_dir)
+        merged = _deep_merge(merged, raw)
+
+    return _build_settings(merged, source=user_path)
 
 
 def _load_type_file(path: Path) -> TypeDefinition:
@@ -260,21 +327,44 @@ def _load_type_dir(directory: Path) -> dict[str, TypeDefinition]:
     return result
 
 
-def load_type_registry(settings: Settings | None = None) -> TypeRegistry:
+def _read_registry(settings: Settings) -> TypeRegistry:
+    trs = settings.type_registry
+    return TypeRegistry(
+        source_types=_load_type_dir(trs.root / trs.source_types_dir),
+        memory_types=_load_type_dir(trs.root / trs.memory_types_dir),
+    )
+
+
+def load_type_registry(
+    settings: Settings | None = None, *, extend_defaults: bool = True
+) -> TypeRegistry:
     """Build a :class:`TypeRegistry` from ``settings``.
 
     The directory tree and subdirectory names come from
     ``settings.type_registry`` (loaded from the central config file), so
     no layout is hard-coded here.  When ``settings`` is omitted the
     package defaults (:data:`DEFAULT_SETTINGS`) are used.
+
+    By default the registry built from ``settings`` is overlaid on top of
+    the shipped default types: the defaults (``semantic``, ``episodic``,
+    ``conversation``, ...) are always present, and a user type whose file
+    shares a name with a default overrides it.  Pass
+    ``extend_defaults=False`` to get exactly — and only — the types under
+    ``settings`` with no defaults mixed in.
     """
 
     if settings is None:
         settings = DEFAULT_SETTINGS
-    trs = settings.type_registry
+    source = _read_registry(settings)
+
+    # Avoid a redundant self-merge when building the package defaults.
+    if not extend_defaults or settings is DEFAULT_SETTINGS:
+        return source
+
+    base = _read_registry(DEFAULT_SETTINGS)
     return TypeRegistry(
-        source_types=_load_type_dir(trs.root / trs.source_types_dir),
-        memory_types=_load_type_dir(trs.root / trs.memory_types_dir),
+        source_types={**base.source_types, **source.source_types},
+        memory_types={**base.memory_types, **source.memory_types},
     )
 
 
