@@ -5,6 +5,13 @@ Defines the foundational types referenced throughout the PRD:
 - Memory type: Memory (single type, memory_type is config-driven)
 - Provenance types: Provenance, Citation, InteractionRef, ObservationRef, MemoryRef
 - Supporting types: ExtractionMethod, EmbeddingMetadata
+
+Source-type and memory-type names are loaded from configuration
+(``goldfishmem/config/default_types.yaml``) so additional types — and
+their per-type extraction / retrieval attributes — can be added without
+changing this module.  The constants below are convenience aliases for
+the names of the defaults; the authoritative source is
+:data:`goldfishmem.config.DEFAULT_TYPE_REGISTRY`.
 """
 
 from __future__ import annotations
@@ -15,22 +22,20 @@ from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
 
+from goldfishmem.config import DEFAULT_TYPE_REGISTRY
+
 # ---------------------------------------------------------------------------
-# Default type constants
+# Default type constants (loaded from default_types.yaml)
 # ---------------------------------------------------------------------------
 
-# Default source types (PRD §4). Users can define additional source types
-# through configuration.
-SOURCE_TYPE_CONVERSATION: str = "conversation"
-SOURCE_TYPE_CLICKSTREAM: str = "clickstream"
-SOURCE_TYPE_DOCUMENT: str = "document"
-SOURCE_TYPE_DOMAIN_ENTITY: str = "domain_entity"
+SOURCE_TYPE_CONVERSATION: str = DEFAULT_TYPE_REGISTRY.source_type("conversation").name
+SOURCE_TYPE_CLICKSTREAM: str = DEFAULT_TYPE_REGISTRY.source_type("clickstream").name
+SOURCE_TYPE_DOCUMENT: str = DEFAULT_TYPE_REGISTRY.source_type("document").name
+SOURCE_TYPE_DOMAIN_ENTITY: str = DEFAULT_TYPE_REGISTRY.source_type("domain_entity").name
 
-# Default memory types (PRD §5). Users can define additional memory types
-# through configuration.
-MEMORY_TYPE_SEMANTIC: str = "semantic"
-MEMORY_TYPE_EPISODIC: str = "episodic"
-MEMORY_TYPE_PROCEDURAL: str = "procedural"
+MEMORY_TYPE_SEMANTIC: str = DEFAULT_TYPE_REGISTRY.memory_type("semantic").name
+MEMORY_TYPE_EPISODIC: str = DEFAULT_TYPE_REGISTRY.memory_type("episodic").name
+MEMORY_TYPE_PROCEDURAL: str = DEFAULT_TYPE_REGISTRY.memory_type("procedural").name
 
 
 # ---------------------------------------------------------------------------
@@ -44,11 +49,15 @@ class ExtractionMethod(Enum):
     LLM_EXTRACTION: extracted directly from interactions/observations by the LLM.
     REFLECTION: synthesized from existing memories by the reflect() step.
     CONSOLIDATION: created by merging/deduplicating existing memories.
+    DIRECT_UPDATE: written directly by an external caller without going
+        through the extraction pipeline (e.g. an application-level API
+        that records a known fact, an import job, or a manual edit).
     """
 
     LLM_EXTRACTION = "llm_extraction"
     REFLECTION = "reflection"
     CONSOLIDATION = "consolidation"
+    DIRECT_UPDATE = "direct_update"
 
 
 # ---------------------------------------------------------------------------

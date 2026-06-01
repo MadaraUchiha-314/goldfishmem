@@ -1,0 +1,6 @@
+# Example user config. Because load_settings() treats the shipped package
+# config as a base, we only need to override what differs — here, the
+# location of our own type definitions. Everything else (subdir names,
+# embedding/storage/retrieval) is inherited from goldfishmem's defaults.
+type_registry:
+  root: types

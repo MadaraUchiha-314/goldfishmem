@@ -1,0 +1,31 @@
+# Central configuration for goldfishmem.
+#
+# This file is the single entry point that drives the system. The shipped
+# defaults below are loaded by goldfishmem.config.load_settings(); users
+# override behaviour by passing their own config file to load_settings().
+#
+# Nothing about the system's layout (directory names, etc.) is hard-coded
+# in Python — it all flows from this file.
+
+# Where type definitions live. `root` is resolved relative to this config
+# file unless it is an absolute path. `source_types_dir` / `memory_types_dir`
+# are the subdirectory names within `root` that hold the per-type YAML files.
+type_registry:
+  root: default_types
+  source_types_dir: source_types
+  memory_types_dir: memory_types
+
+# Embedding configuration (model + dimensionality). `null` means "not yet
+# configured"; these are wired up as the embedding pipeline lands.
+embedding:
+  model: null
+  dimensions: null
+
+# Storage backend configuration.
+storage:
+  backend: null
+  options: {}
+
+# Retrieval configuration.
+retrieval:
+  options: {}

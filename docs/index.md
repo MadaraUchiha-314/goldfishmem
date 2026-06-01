@@ -15,15 +15,22 @@ uv add goldfishmem
 
 ## Quick start
 
-```python
-from goldfishmem import hello_world
+goldfishmem is config-driven. Load the shipped defaults (or your own
+`goldfishmem.yaml`) and build the type registry:
 
-print(hello_world())            # "Hello, world!"
-print(hello_world("goldfish"))  # "Hello, goldfish!"
+```python
+from goldfishmem import DEFAULT_SETTINGS, load_type_registry
+
+registry = load_type_registry(DEFAULT_SETTINGS)
+print(sorted(registry.memory_types))   # ['episodic', 'procedural', 'semantic']
+print(sorted(registry.source_types))   # ['clickstream', 'conversation', 'document', 'domain_entity']
 ```
+
+See [Configuration](./configuration.md) for custom types and config layering.
 
 ## Documentation
 
+- [Configuration](./configuration.md) — the central config file, type definitions, and layering.
 - [Architecture](./architecture.md) — how goldfishmem is structured internally.
 
 ## Project links
